@@ -1,0 +1,11 @@
+Ansible code bot has identified several rule violations in the repo playbooks. Here's a breakdown of the violations based on the relevant rules:
+
+* Rule Violations:
+  * 385 files have been modified to replace short names with fully qualified collection names.
+  * 112 files have been modified to remove keys that are already defined in module_defaults.
+  * 12 files have been modified to use recommended boolean expressions (true / false).
+  * 125 files have been modified to avoid loop style if module option accepts list.
+  * 19 files have been modified to avoid empty string compare.
+  * 58 files have been modified to use the correct parameter value for modules that can accept lists.
+
+Note: The numbers of files are based on the input "Modified 460 files."

@@ -1,0 +1,423 @@
+diff --git a/playbooks/Network/get_network_adapter_details.yml b/playbooks/Network/get_network_adapter_details.yml
+index d607feb..82fe7e3 100644
+--- a/playbooks/Network/get_network_adapter_details.yml
++++ b/playbooks/Network/get_network_adapter_details.yml
+@@ -4 +4 @@
+-  gather_facts: False
++  gather_facts: false
+@@ -7,2 +6,0 @@
+-      fail:
+-        msg: "username/password or cert_file/key_file or auth_token is mandatory"
+@@ -10,0 +9,2 @@
++      ansible.builtin.fail:
++        msg: username/password or cert_file/key_file or auth_token is mandatory
+@@ -13,2 +12,0 @@
+-      fail:
+-        msg: "Only one authentication method is allowed. Provide either username/password or cert_file/key_file or auth_token."
+@@ -16,4 +14,5 @@
+-        - ((username is defined or password is defined) and (cert_file is defined or key_file is defined) and auth_token is defined) or
+-          ((username is defined or password is defined) and (cert_file is defined or key_file is defined)) or
+-          ((username is defined or password is defined) and auth_token is defined) or
+-          ((cert_file is defined or key_file is defined) and auth_token is defined)
++        - ((username is defined or password is defined) and (cert_file is defined or key_file is defined) and auth_token is defined) or ((username is defined or password
++          is defined) and (cert_file is defined or key_file is defined)) or ((username is defined or password is defined) and auth_token is defined) or ((cert_file
++          is defined or key_file is defined) and auth_token is defined)
++      ansible.builtin.fail:
++        msg: Only one authentication method is allowed. Provide either username/password or cert_file/key_file or auth_token.
+diff --git a/playbooks/create_output_file.yml b/playbooks/create_output_file.yml
+index a9aa31d..2965c1f 100644
+--- a/playbooks/create_output_file.yml
++++ b/playbooks/create_output_file.yml
+@@ -2,3 +2,3 @@
+-  - name: Define timestamp
+-    set_fact: timestamp="{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+-    run_once: true
++- name: Define timestamp
++  run_once: true
++  ansible.builtin.set_fact:
+@@ -6,2 +6,2 @@
+-  - name: Define file to place results
+-    set_fact: template={{rootdir}}/{{host}}/{{host}}_{{datatype}}_{{timestamp}}
++- name: Define file to place results
++  ansible.builtin.set_fact:
+@@ -9,4 +9,4 @@
+-  - name: Create dropoff directory for host
+-    file:
+-      path: "{{ rootdir }}/{{ host }}"
+-      state: directory
+\ No newline at end of file
++- name: Create dropoff directory for host
++  ansible.builtin.file:
++    path: "{{ rootdir }}/{{ host }}"
++    state: directory
+diff --git a/playbooks/disable_pxe.yml b/playbooks/disable_pxe.yml
+index 39b674e..4ceac45 100644
+--- a/playbooks/disable_pxe.yml
++++ b/playbooks/disable_pxe.yml
+@@ -5 +5 @@
+-  gather_facts: False
++  gather_facts: false
+@@ -9 +9 @@
+-  - bios_attr: {"Slot1NicBoot1": "Disabled"}  # The dictionary is of the format {"attribute_name" : "attribute_value"}
++    - bios_attr: { Slot1NicBoot1: Disabled } # The dictionary is of the format {"attribute_name" : "attribute_value"}
+@@ -12,8 +12,8 @@
+-  - name: Create session
+-    redfish_command:
+-      category: Sessions
+-      command: CreateSession
+-      baseuri: "{{ baseuri }}"
+-      username: "{{ username }}"
+-      password: "{{ password }}"
+-    register: result
++    - name: Create session
++      register: result
++      community.general.redfish_command:
++        category: Sessions
++        command: CreateSession
++        baseuri: "{{ baseuri }}"
++        username: "{{ username }}"
++        password: "{{ password }}"
+@@ -21,10 +21,10 @@
+-  - name: Set {{ bios_attr }}
+-    redfish_config:
+-      category: Systems
+-      command: SetBiosAttributes
+-      bios_attributes: "{{ bios_attr }}"
+-      baseuri: "{{ baseuri }}"
+-      # username: "{{ username }}"
+-      # password: "{{ password }}"
+-      auth_token: "{{ result.session.token }}"
+-    register: bios_attribute
++    - name: Set {{ bios_attr }}
++      register: bios_attribute
++      community.general.redfish_config:
++        category: Systems
++        command: SetBiosAttributes
++        bios_attributes: "{{ bios_attr }}"
++        baseuri: "{{ baseuri }}"
++        # username: "{{ username }}"
++        # password: "{{ password }}"
++        auth_token: "{{ result.session.token }}"
+@@ -32,9 +32,9 @@
+-  - name: Reboot system to apply new BIOS settings
+-    redfish_command:
+-      category: Systems
+-      command: PowerReboot
+-      baseuri: "{{ baseuri }}"
+-      # username: "{{ username }}"
+-      # password: "{{ password }}"
+-      auth_token: "{{ result.session.token }}"
+-    when: bios_attribute.changed
++    - name: Reboot system to apply new BIOS settings
++      when: bios_attribute.changed
++      community.general.redfish_command:
++        category: Systems
++        command: PowerReboot
++        baseuri: "{{ baseuri }}"
++        # username: "{{ username }}"
++        # password: "{{ password }}"
++        auth_token: "{{ result.session.token }}"
+@@ -42,7 +42,7 @@
+-  - name: Delete session using security token created by CreateSesssion above
+-    redfish_command:
+-      category: Sessions
+-      command: DeleteSession
+-      baseuri: "{{ baseuri }}"
+-      auth_token: "{{ result.session.token }}"
+-      session_uri: "{{ result.session.uri }}"
++    - name: Delete session using security token created by CreateSesssion above
++      community.general.redfish_command:
++        category: Sessions
++        command: DeleteSession
++        baseuri: "{{ baseuri }}"
++        auth_token: "{{ result.session.token }}"
++        session_uri: "{{ result.session.uri }}"
+diff --git a/playbooks/submit_service_quota_increase.yml b/playbooks/submit_service_quota_increase.yml
+index 567bc9b..27ff425 100644
+--- a/playbooks/submit_service_quota_increase.yml
++++ b/playbooks/submit_service_quota_increase.yml
+@@ -4,2 +4,2 @@
+-    cmd: "aws --region {{ customer_account_region }} service-quotas list-requested-service-quota-change-history-by-quota
+-             --service-code {{ item.service_code }} --quota-code {{ item.quota_code }}"
++    cmd: aws --region {{ customer_account_region }} service-quotas list-requested-service-quota-change-history-by-quota --service-code {{ item.service_code }} --quota-code
++      {{ item.quota_code }}
+@@ -10,2 +10,2 @@
+-  when: ((quota_change_history.stdout | from_json).RequestedQuotas | length == 0) or
+-        (((quota_change_history.stdout | from_json).RequestedQuotas[0].DesiredValue | int) != (item.value | int))
++  when: ((quota_change_history.stdout | from_json).RequestedQuotas | length == 0) or (((quota_change_history.stdout | from_json).RequestedQuotas[0].DesiredValue |
++    int) != (item.value | int))
+@@ -13,2 +13,2 @@
+-    cmd: "aws --region {{ customer_account_region }} service-quotas request-service-quota-increase
+-             --service-code {{ item.service_code }} --quota-code {{ item.quota_code }} --desired-value {{ item.value }}"
++    cmd: aws --region {{ customer_account_region }} service-quotas request-service-quota-increase --service-code {{ item.service_code }} --quota-code {{ item.quota_code
++      }} --desired-value {{ item.value }}
+diff --git a/playbooks/update_repo_custom_properties.yml b/playbooks/update_repo_custom_properties.yml
+index 4e137e4..79821fe 100644
+--- a/playbooks/update_repo_custom_properties.yml
++++ b/playbooks/update_repo_custom_properties.yml
+@@ -8,0 +9 @@
++
+diff --git a/roles/run/tasks/health_checks/eos.yaml b/roles/run/tasks/health_checks/eos.yaml
+index b71a087..0336c8d 100644
+--- a/roles/run/tasks/health_checks/eos.yaml
++++ b/roles/run/tasks/health_checks/eos.yaml
+@@ -4 +4 @@
+-    command: "show ip bgp summary"
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/health_checks/ios.yaml b/roles/run/tasks/health_checks/ios.yaml
+index d2e66f2..3b3b27e 100644
+--- a/roles/run/tasks/health_checks/ios.yaml
++++ b/roles/run/tasks/health_checks/ios.yaml
+@@ -4 +4 @@
+-    command: "show bgp summary"
++    command: show bgp summary
+diff --git a/roles/run/tasks/health_checks/iosxr.yaml b/roles/run/tasks/health_checks/iosxr.yaml
+index d2e66f2..3b3b27e 100644
+--- a/roles/run/tasks/health_checks/iosxr.yaml
++++ b/roles/run/tasks/health_checks/iosxr.yaml
+@@ -4 +4 @@
+-    command: "show bgp summary"
++    command: show bgp summary
+diff --git a/roles/run/tasks/health_checks/junos.yaml b/roles/run/tasks/health_checks/junos.yaml
+index bacc328..42251a2 100644
+--- a/roles/run/tasks/health_checks/junos.yaml
++++ b/roles/run/tasks/health_checks/junos.yaml
+@@ -4 +4 @@
+-    command: "show bgp summary"
++    command: show bgp summary
+@@ -9 +8,0 @@
+-
+@@ -11 +10 @@
+-  debug:
++  ansible.builtin.debug:
+diff --git a/roles/run/tasks/health_checks/nxos.yaml b/roles/run/tasks/health_checks/nxos.yaml
+index b71a087..0336c8d 100644
+--- a/roles/run/tasks/health_checks/nxos.yaml
++++ b/roles/run/tasks/health_checks/nxos.yaml
+@@ -4 +4 @@
+-    command: "show ip bgp summary"
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/health_checks/vyos.yaml b/roles/run/tasks/health_checks/vyos.yaml
+index b43708c..0336c8d 100644
+--- a/roles/run/tasks/health_checks/vyos.yaml
++++ b/roles/run/tasks/health_checks/vyos.yaml
+@@ -3,2 +3,2 @@
+-  cli_parse:
+-    command: "show ip bgp summary"
++  ansible.utils.cli_parse:
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/includes/configure.yaml b/roles/run/tasks/includes/configure.yaml
+index 7916b41..8996f45 100644
+--- a/roles/run/tasks/includes/configure.yaml
++++ b/roles/run/tasks/includes/configure.yaml
+@@ -3,2 +2,0 @@
+-  include_role:
+-    name: network.base.resource_manager
+@@ -6 +4,3 @@
+-    operation: 'configure'
++    operation: configure
++  ansible.builtin.include_role:
++    name: network.base.resource_manager
+diff --git a/roles/run/tasks/includes/deploy.yaml b/roles/run/tasks/includes/deploy.yaml
+index 19beb88..4b5f82b 100644
+--- a/roles/run/tasks/includes/deploy.yaml
++++ b/roles/run/tasks/includes/deploy.yaml
+@@ -9 +9 @@
+-    operation: 'deploy'
++    operation: deploy
+diff --git a/roles/run/tasks/includes/detect.yaml b/roles/run/tasks/includes/detect.yaml
+index f87154a..4259211 100644
+--- a/roles/run/tasks/includes/detect.yaml
++++ b/roles/run/tasks/includes/detect.yaml
+@@ -9,2 +9,2 @@
+-    operation: 'detect'
+-    state: 'replaced'
++    operation: detect
++    state: replaced
+diff --git a/roles/run/tasks/includes/gather.yaml b/roles/run/tasks/includes/gather.yaml
+index cdc447a..9dca879 100644
+--- a/roles/run/tasks/includes/gather.yaml
++++ b/roles/run/tasks/includes/gather.yaml
+@@ -6,2 +5,0 @@
+-  include_role:
+-    name: network.base.resource_manager
+@@ -9 +7 @@
+-    operation: 'gather'
++    operation: gather
+@@ -10,0 +9,2 @@
++  ansible.builtin.include_role:
++    name: network.base.resource_manager
+diff --git a/roles/run/tasks/includes/health_check.yaml b/roles/run/tasks/includes/health_check.yaml
+index 8ccd20f..7593bfb 100644
+--- a/roles/run/tasks/includes/health_check.yaml
++++ b/roles/run/tasks/includes/health_check.yaml
+@@ -7 +7 @@
+-     health_checks: "{{ bgp_health | network.bgp.health_check_view(operation) }}"
++    health_checks: "{{ bgp_health | network.bgp.health_check_view(operation) }}"
+@@ -10,2 +9,0 @@
+-  debug:
+-     var: health_checks
+@@ -12,0 +11,2 @@
++  ansible.builtin.debug:
++    var: health_checks
+diff --git a/roles/run/tasks/includes/health_checks/eos.yaml b/roles/run/tasks/includes/health_checks/eos.yaml
+index b43708c..0336c8d 100644
+--- a/roles/run/tasks/includes/health_checks/eos.yaml
++++ b/roles/run/tasks/includes/health_checks/eos.yaml
+@@ -3,2 +3,2 @@
+-  cli_parse:
+-    command: "show ip bgp summary"
++  ansible.utils.cli_parse:
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/includes/health_checks/ios.yaml b/roles/run/tasks/includes/health_checks/ios.yaml
+index d2e66f2..3b3b27e 100644
+--- a/roles/run/tasks/includes/health_checks/ios.yaml
++++ b/roles/run/tasks/includes/health_checks/ios.yaml
+@@ -4 +4 @@
+-    command: "show bgp summary"
++    command: show bgp summary
+diff --git a/roles/run/tasks/includes/health_checks/iosxr.yaml b/roles/run/tasks/includes/health_checks/iosxr.yaml
+index 2a6bca3..3b3b27e 100644
+--- a/roles/run/tasks/includes/health_checks/iosxr.yaml
++++ b/roles/run/tasks/includes/health_checks/iosxr.yaml
+@@ -3,2 +3,2 @@
+-  cli_parse:
+-    command: "show bgp summary"
++  ansible.utils.cli_parse:
++    command: show bgp summary
+diff --git a/roles/run/tasks/includes/health_checks/junos.yaml b/roles/run/tasks/includes/health_checks/junos.yaml
+index bacc328..42251a2 100644
+--- a/roles/run/tasks/includes/health_checks/junos.yaml
++++ b/roles/run/tasks/includes/health_checks/junos.yaml
+@@ -4 +4 @@
+-    command: "show bgp summary"
++    command: show bgp summary
+@@ -9 +8,0 @@
+-
+@@ -11 +10 @@
+-  debug:
++  ansible.builtin.debug:
+diff --git a/roles/run/tasks/includes/health_checks/nxos.yaml b/roles/run/tasks/includes/health_checks/nxos.yaml
+index b71a087..0336c8d 100644
+--- a/roles/run/tasks/includes/health_checks/nxos.yaml
++++ b/roles/run/tasks/includes/health_checks/nxos.yaml
+@@ -4 +4 @@
+-    command: "show ip bgp summary"
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/includes/health_checks/vyos.yaml b/roles/run/tasks/includes/health_checks/vyos.yaml
+index b43708c..0336c8d 100644
+--- a/roles/run/tasks/includes/health_checks/vyos.yaml
++++ b/roles/run/tasks/includes/health_checks/vyos.yaml
+@@ -3,2 +3,2 @@
+-  cli_parse:
+-    command: "show ip bgp summary"
++  ansible.utils.cli_parse:
++    command: show ip bgp summary
+diff --git a/roles/run/tasks/includes/list.yaml b/roles/run/tasks/includes/list.yaml
+index 03d5bd3..c794b39 100644
+--- a/roles/run/tasks/includes/list.yaml
++++ b/roles/run/tasks/includes/list.yaml
+@@ -6 +6 @@
+-    operation: 'list'
++    operation: list
+diff --git a/roles/run/tasks/includes/persist.yaml b/roles/run/tasks/includes/persist.yaml
+index c27e14f..a44eb28 100644
+--- a/roles/run/tasks/includes/persist.yaml
++++ b/roles/run/tasks/includes/persist.yaml
+@@ -9 +9 @@
+-    operation: 'persist'
++    operation: persist
+diff --git a/roles/run/tasks/includes/remediate.yaml b/roles/run/tasks/includes/remediate.yaml
+index 63a7aa2..406b0cc 100644
+--- a/roles/run/tasks/includes/remediate.yaml
++++ b/roles/run/tasks/includes/remediate.yaml
+@@ -9,2 +9,2 @@
+-    operation: 'remediate'
+-    state: 'replaced'
++    operation: remediate
++    state: replaced
+diff --git a/roles/run/tasks/includes/resources.yaml b/roles/run/tasks/includes/resources.yaml
+index b0332cf..0dfda14 100644
+--- a/roles/run/tasks/includes/resources.yaml
++++ b/roles/run/tasks/includes/resources.yaml
+@@ -5,3 +5,3 @@
+-      - 'bgp_global'
+-      - 'bgp_address_family'
+-      - 'bgp_neighbor_address_family'
++      - bgp_global
++      - bgp_address_family
++      - bgp_neighbor_address_family
+@@ -13,2 +13,2 @@
+-      - 'bgp_global'
+-      - 'bgp_address_family'
++      - bgp_global
++      - bgp_address_family
+diff --git a/roles/run/tasks/test_play.yml b/roles/run/tasks/test_play.yml
+index 752c1eb..aa0a61c 100644
+--- a/roles/run/tasks/test_play.yml
++++ b/roles/run/tasks/test_play.yml
+@@ -3 +2,0 @@
+-  include_tasks: includes/{{ operation.name }}.yaml
+@@ -6,0 +6 @@
++  ansible.builtin.include_tasks: includes/{{ operation.name }}.yaml
+@@ -9,2 +8,0 @@
+-  fail:
+-    msg: username/password or cert_file/key_file or auth_token is mandatory
+@@ -12,0 +11,2 @@
++  ansible.builtin.fail:
++    msg: username/password or cert_file/key_file or auth_token is mandatory
+@@ -15,2 +14,0 @@
+-  fail:
+-    msg: Only one authentication method is allowed. Provide either username/password or cert_file/key_file or auth_token.
+@@ -19,2 +17,4 @@
+-      is defined) and (cert_file is defined or key_file is defined)) or ((username is defined or password is defined) and auth_token is defined) or ((cert_file
+-      is defined or key_file is defined) and auth_token is defined)
++      is defined) and (cert_file is defined or key_file is defined)) or ((username is defined or password is defined) and auth_token is defined) or ((cert_file is
++      defined or key_file is defined) and auth_token is defined)
++  ansible.builtin.fail:
++    msg: Only one authentication method is allowed. Provide either username/password or cert_file/key_file or auth_token.
+diff --git a/tests/integration/targets/check_reboot_status/tasks/main.yml b/tests/integration/targets/check_reboot_status/tasks/main.yml
+index bcf2dea..cb18170 100644
+--- a/tests/integration/targets/check_reboot_status/tasks/main.yml
++++ b/tests/integration/targets/check_reboot_status/tasks/main.yml
+@@ -0,0 +1 @@
++---
+@@ -2 +3,2 @@
+-  check_reboot_status:
++  register: result
++  hpe.ilo.check_reboot_status:
+@@ -6 +7,0 @@
+-  register: result
+@@ -9 +10 @@
+-  debug:
++  ansible.builtin.debug:
+diff --git a/tests/integration/targets/create_snmp_alert_destinations/tasks/main.yml b/tests/integration/targets/create_snmp_alert_destinations/tasks/main.yml
+index dc05128..169cf71 100644
+--- a/tests/integration/targets/create_snmp_alert_destinations/tasks/main.yml
++++ b/tests/integration/targets/create_snmp_alert_destinations/tasks/main.yml
+@@ -0,0 +1 @@
++---
+@@ -2 +3,2 @@
+-  create_snmp_alert_destinations:
++  register: result
++  hpe.ilo.create_snmp_alert_destinations:
+@@ -7 +8,0 @@
+-  register: result
+@@ -10 +11 @@
+-  debug:
++  ansible.builtin.debug:
+diff --git a/tests/integration/targets/verify_logical_drives/tasks/main.yml b/tests/integration/targets/verify_logical_drives/tasks/main.yml
+index 024915e..7f25cd3 100644
+--- a/tests/integration/targets/verify_logical_drives/tasks/main.yml
++++ b/tests/integration/targets/verify_logical_drives/tasks/main.yml
+@@ -0,0 +1 @@
++---
+@@ -2 +3,2 @@
+-  verify_logical_drives:
++  register: result
++  hpe.ilo.verify_logical_drives:
+@@ -7 +8,0 @@
+-  register: result
+@@ -10 +11 @@
+-  debug:
++  ansible.builtin.debug:

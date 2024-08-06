@@ -1,0 +1,6 @@
+Modified 34 files.
+Rule Violation Summary
+Rules    Count
+W001     31
+W004     2
+W016     1

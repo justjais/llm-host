@@ -113,7 +113,8 @@ def summarize_input(rag, context, user_input_text, standard_output, prompt_query
 
     return rag_summary
 
-PATH = "<PWD>"
+#PATH = "<PWD>"
+PATH = os.getcwd() + "/llm"
 # FILENAME = "config_data/lint-autofix-rules.md"
 FILENAME = "config_data/ari-rules-context.md"
 # FILENAME = "config_data/noexample-autofix-ari.md"

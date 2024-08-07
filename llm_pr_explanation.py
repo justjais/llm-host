@@ -1,5 +1,6 @@
 """
-Module to create RAG app. for summarizing the input context
+Module to create RAG app. for summarizing the input context,
+and generating PR explanation.
 """
 import os
 import tiktoken

@@ -1,0 +1,13 @@
+langchain_community
+langchain
+langchain_core
+langchain_ibm
+flask
+streamlit
+tiktoken
+unstructured
+markdown
+# For GPU ones
+#faiss-gpu
+# For CPU ones
+faiss-cpu
